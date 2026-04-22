@@ -21,11 +21,11 @@
     <!-- LANDLORD DASHBOARD -->
     <section id="landlordSection">
       <div class="dashboard-cards">
-        <div class="card">
+        <div class="card green">
           <div class="card-label">Total Houses</div>
           <div id="totalHouses" class="card-value">0</div>
         </div>
-        <div class="card">
+        <div class="card blue">
           <div class="card-label">Total Tenants</div>
           <div id="totalTenants" class="card-value">0</div>
         </div>
@@ -50,16 +50,32 @@
       </section>
 
       <button id="addHouseBtn" class="fab-btn blue">+ Add House</button>
+      <button id="aiHelperBtn" class="fab-btn green">🤖 Help</button>
 
-      <!-- SIMPLE HOUSE FORM (STEP BY STEP FEEL) -->
+      <!-- AI Helper Modal -->
+      <div id="aiHelperModal" class="modal hidden">
+        <div class="modal-content">
+          <h2>How to Use GhanaRent 🤝</h2>
+          <ul>
+            <li>🏠 Add House → Start with area, type, rent.</li>
+            <li>📸 Capture or upload house pictures.</li>
+            <li>💰 Advance rent is common: 6 months, 1 year, or 2 years.</li>
+            <li>📲 Use WhatsApp button to remind tenants.</li>
+            <li>✅ Green = Paid, Red = Owing.</li>
+          </ul>
+          <button id="closeAiHelperBtn" class="blue">Got it!</button>
+        </div>
+      </div>
+
+      <!-- House Form Modal -->
       <div id="houseFormModal" class="modal hidden">
         <div class="modal-content">
           <h2>Add House</h2>
           <label>House Name</label>
-          <input id="houseNameInput" type="text" placeholder="Dansoman 2-Bedroom" />
+          <input id="houseNameInput" type="text" />
 
           <label>Area</label>
-          <input id="houseAreaInput" type="text" placeholder="Dansoman" />
+          <input id="houseAreaInput" type="text" />
 
           <label>Type</label>
           <select id="houseTypeInput">
@@ -71,7 +87,7 @@
           </select>
 
           <label>Address</label>
-          <input id="houseAddressInput" type="text" placeholder="Near Roundabout, Dansoman" />
+          <input id="houseAddressInput" type="text" />
 
           <label>Monthly Rent (₵)</label>
           <input id="houseRentInput" type="number" />
@@ -86,8 +102,15 @@
           <label>Damage Deposit (₵)</label>
           <input id="houseDepositInput" type="number" />
 
-          <label>House Images (you can pick 1 or more)</label>
-          <input id="houseImagesInput" type="file" accept="image/*" multiple />
+          <h3>House Images</h3>
+          <div class="image-options">
+            <label>📷 Capture</label>
+            <input id="houseCaptureInput" type="file" accept="image/*" capture="environment" />
+            <label>🖼 Upload from Gallery</label>
+            <input id="houseGalleryInput" type="file" accept="image/*" />
+            <label>🔗 Paste Image Link</label>
+            <input id="houseLinkInput" type="url" placeholder="https://example.com/image.jpg" />
+          </div>
 
           <div class="modal-actions">
             <button id="saveHouseBtn" class="blue">Save House</button>
@@ -99,10 +122,7 @@
 
     <!-- VISITOR SECTION -->
     <section id="visitorSection" class="hidden">
-      <h2>Available Rooms & Houses</h2>
-      <p class="small-text">
-        Landlord can share this page link. Tenant can see only vacant places.
-      </p>
+      <h2>Available Houses</h2>
       <div id="visitorPropertyList" class="property-grid"></div>
     </section>
   </main>
