@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>GhanaRent</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="styles.css" />
+  <meta name="theme-color" content="#0b8f3b" />
+</head>
+<body>
+  <header class="app-header">
+    <h1>GhanaRent</h1>
+    <div class="mode-toggle">
+      <button id="landlordModeBtn" class="mode-btn active">Landlord</button>
+      <button id="visitorModeBtn" class="mode-btn">Visitor</button>
+    </div>
+  </header>
+
+  <main id="app">
+    <!-- LANDLORD DASHBOARD -->
+    <section id="landlordSection">
+      <div class="dashboard-cards">
+        <div class="card">
+          <div class="card-label">Total Houses</div>
+          <div id="totalHouses" class="card-value">0</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Total Tenants</div>
+          <div id="totalTenants" class="card-value">0</div>
+        </div>
+        <div class="card green">
+          <div class="card-label">This Month Collected</div>
+          <div id="thisMonthCollected" class="card-value">₵0</div>
+        </div>
+        <div class="card red">
+          <div class="card-label">Still Owing</div>
+          <div id="stillOwing" class="card-value">₵0</div>
+        </div>
+      </div>
+
+      <section class="list-section">
+        <h2 class="red-text">RED LIST - Owing</h2>
+        <div id="owingList" class="list"></div>
+      </section>
+
+      <section class="list-section">
+        <h2 class="green-text">GREEN LIST - Paid Up</h2>
+        <div id="paidList" class="list"></div>
+      </section>
+
+      <button id="addHouseBtn" class="fab-btn blue">+ Add House</button>
+
+      <!-- SIMPLE HOUSE FORM (STEP BY STEP FEEL) -->
+      <div id="houseFormModal" class="modal hidden">
+        <div class="modal-content">
+          <h2>Add House</h2>
+          <label>House Name</label>
+          <input id="houseNameInput" type="text" placeholder="Dansoman 2-Bedroom" />
+
+          <label>Area</label>
+          <input id="houseAreaInput" type="text" placeholder="Dansoman" />
+
+          <label>Type</label>
+          <select id="houseTypeInput">
+            <option>Single Room</option>
+            <option>Chamber&Hall</option>
+            <option>Self-Contain</option>
+            <option>2-Bedroom</option>
+            <option>Compound</option>
+          </select>
+
+          <label>Address</label>
+          <input id="houseAddressInput" type="text" placeholder="Near Roundabout, Dansoman" />
+
+          <label>Monthly Rent (₵)</label>
+          <input id="houseRentInput" type="number" />
+
+          <label>Advance Required</label>
+          <select id="houseAdvanceInput">
+            <option>6 Months</option>
+            <option>1 Year</option>
+            <option>2 Years</option>
+          </select>
+
+          <label>Damage Deposit (₵)</label>
+          <input id="houseDepositInput" type="number" />
+
+          <label>House Images (you can pick 1 or more)</label>
+          <input id="houseImagesInput" type="file" accept="image/*" multiple />
+
+          <div class="modal-actions">
+            <button id="saveHouseBtn" class="blue">Save House</button>
+            <button id="cancelHouseBtn" class="red">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VISITOR SECTION -->
+    <section id="visitorSection" class="hidden">
+      <h2>Available Rooms & Houses</h2>
+      <p class="small-text">
+        Landlord can share this page link. Tenant can see only vacant places.
+      </p>
+      <div id="visitorPropertyList" class="property-grid"></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js');
+      });
+    }
+  </script>
+</body>
+</html>
