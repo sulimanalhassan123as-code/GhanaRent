@@ -1,0 +1,262 @@
+:root {
+  --green: #0b8f3b;
+  --red: #d7263d;
+  --blue: #0077cc;
+  --bg: #f5f5f5;
+  --text: #222;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app-header {
+  background: #fff;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #ddd;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.mode-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.mode-btn {
+  border: none;
+  padding: 6px 10px;
+  border-radius: 16px;
+  font-size: 13px;
+  background: #eee;
+}
+
+.mode-btn.active {
+  background: var(--blue);
+  color: #fff;
+}
+
+main {
+  padding: 12px;
+}
+
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.card {
+  background: #fff;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.card-label {
+  color: #555;
+}
+
+.card-value {
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.card.green {
+  border-left: 4px solid var(--green);
+}
+
+.card.red {
+  border-left: 4px solid var(--red);
+}
+
+.list-section {
+  margin-top: 16px;
+}
+
+.list-section h2 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.red-text {
+  color: var(--red);
+}
+
+.green-text {
+  color: var(--green);
+}
+
+.list {
+  background: #fff;
+  border-radius: 8px;
+  padding: 8px;
+  min-height: 40px;
+  font-size: 13px;
+}
+
+.list-item {
+  border-bottom: 1px solid #eee;
+  padding: 6px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.list-item:last-child {
+  border-bottom: none;
+}
+
+.badge {
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 11px;
+  color: #fff;
+}
+
+.badge.red {
+  background: var(--red);
+}
+
+.badge.green {
+  background: var(--green);
+}
+
+.badge.blue {
+  background: var(--blue);
+}
+
+.small-btn {
+  font-size: 11px;
+  padding: 4px 6px;
+  border-radius: 12px;
+  border: none;
+  background: var(--blue);
+  color: #fff;
+}
+
+.fab-btn {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  border-radius: 24px;
+  padding: 12px 18px;
+  border: none;
+  color: #fff;
+  font-size: 16px;
+}
+
+.fab-btn.blue {
+  background: var(--blue);
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 16px;
+  border-radius: 8px;
+  width: 95%;
+  max-width: 400px;
+}
+
+.modal-content h2 {
+  margin-top: 0;
+}
+
+.modal-content label {
+  display: block;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.modal-content input,
+.modal-content select {
+  width: 100%;
+  padding: 6px;
+  margin-top: 4px;
+  font-size: 14px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.modal-actions button {
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  color: #fff;
+}
+
+.modal-actions .blue {
+  background: var(--blue);
+}
+
+.modal-actions .red {
+  background: var(--red);
+}
+
+.hidden {
+  display: none;
+}
+
+.property-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.property-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 13px;
+}
+
+.property-images {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  margin-top: 6px;
+}
+
+.property-images img {
+  width: 90px;
+  height: 70px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.small-text {
+  font-size: 12px;
+  color: #555;
+}
