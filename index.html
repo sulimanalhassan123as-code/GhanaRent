@@ -1,140 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>GhanaRent</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="stylesheet" href="styles.css" />
-  <meta name="theme-color" content="#0b8f3b" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GhanaRent</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#007BFF">
 </head>
 <body>
-  <header class="app-header">
-    <h1>GhanaRent</h1>
-    <div class="mode-toggle">
-      <button id="landlordModeBtn" class="mode-btn active">Landlord</button>
-      <button id="visitorModeBtn" class="mode-btn">Visitor</button>
-      <button id="installBtn" class="mode-btn blue">⬇️ Install</button>
+    <header id="app-header">
+        <h1 id="header-title">🏠 GhanaRent</h1>
+        <button id="install-btn" class="hidden btn-small">📲 Install App</button>
+    </header>
+
+    <main id="app-content">
+        </main>
+
+    <div id="ai-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>🤖 GhanaRent Helper</h3>
+            <p id="ai-tip">Welcome! Everything is working offline perfectly. ✅</p>
+            <button class="btn-blue" onclick="document.getElementById('ai-modal').classList.add('hidden')">Okay, thanks!</button>
+        </div>
     </div>
-  </header>
 
-  <main id="app">
-    <!-- LANDLORD SECTION -->
-    <section id="landlordSection">
-      <div class="dashboard-cards">
-        <div class="card green">
-          <div class="card-label">Total Houses</div>
-          <div id="totalHouses" class="card-value">0</div>
-        </div>
-        <div class="card blue">
-          <div class="card-label">Total Tenants</div>
-          <div id="totalTenants" class="card-value">0</div>
-        </div>
-        <div class="card green">
-          <div class="card-label">This Month Collected</div>
-          <div id="thisMonthCollected" class="card-value">₵0</div>
-        </div>
-        <div class="card red">
-          <div class="card-label">Still Owing</div>
-          <div id="stillOwing" class="card-value">₵0</div>
-        </div>
-      </div>
-
-      <section class="list-section">
-        <h2 class="red-text">RED LIST - Owing</h2>
-        <div id="owingList" class="list"></div>
-      </section>
-
-      <section class="list-section">
-        <h2 class="green-text">GREEN LIST - Paid Up</h2>
-        <div id="paidList" class="list"></div>
-      </section>
-
-      <button id="addHouseBtn" class="fab-btn blue">+ Add House</button>
-      <button id="aiHelperBtn" class="fab-btn green">🤖 Help</button>
-
-      <!-- AI Helper Modal -->
-      <div id="aiHelperModal" class="modal hidden">
-        <div class="modal-content">
-          <h2>How to Use GhanaRent 🤝</h2>
-          <ul>
-            <li>🏠 Add House → Start with area, type, rent.</li>
-            <li>📸 Capture or upload house pictures.</li>
-            <li>💰 Advance rent is common: 6 months, 1 year, or 2 years.</li>
-            <li>📲 Use WhatsApp button to remind tenants.</li>
-            <li>✅ Green = Paid, Red = Owing.</li>
-          </ul>
-          <button id="closeAiHelperBtn" class="blue">Got it!</button>
-        </div>
-      </div>
-
-      <!-- House Form Modal -->
-      <div id="houseFormModal" class="modal hidden">
-        <div class="modal-content">
-          <h2>Add House</h2>
-          <label>House Name</label>
-          <input id="houseNameInput" type="text" />
-
-          <label>Area</label>
-          <input id="houseAreaInput" type="text" />
-
-          <label>Type</label>
-          <select id="houseTypeInput">
-            <option>Single Room</option>
-            <option>Chamber&Hall</option>
-            <option>Self-Contain</option>
-            <option>2-Bedroom</option>
-            <option>Compound</option>
-          </select>
-
-          <label>Address</label>
-          <input id="houseAddressInput" type="text" />
-
-          <label>Monthly Rent (₵)</label>
-          <input id="houseRentInput" type="number" />
-
-          <label>Advance Required</label>
-          <select id="houseAdvanceInput">
-            <option>6 Months</option>
-            <option>1 Year</option>
-            <option>2 Years</option>
-          </select>
-
-          <label>Damage Deposit (₵)</label>
-          <input id="houseDepositInput" type="number" />
-
-          <h3>House Images</h3>
-          <div class="image-options">
-            <label>📷 Capture</label>
-            <input id="houseCaptureInput" type="file" accept="image/*" capture="environment" />
-            <label>🖼 Upload from Gallery</label>
-            <input id="houseGalleryInput" type="file" accept="image/*" />
-            <label>🔗 Paste Image Link</label>
-            <input id="houseLinkInput" type="url" placeholder="https://example.com/image.jpg" />
-          </div>
-
-          <div class="modal-actions">
-            <button id="saveHouseBtn" class="blue">Save House</button>
-            <button id="cancelHouseBtn" class="red">Cancel</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- VISITOR SECTION -->
-    <section id="visitorSection" class="hidden">
-      <h2>Available Houses</h2>
-      <div id="visitorPropertyList" class="property-grid"></div>
-    </section>
-  </main>
-
-  <script src="app.js"></script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js');
-      });
-    }
-  </script>
+    <script src="app.js"></script>
+    <script>
+        // Register Service Worker for Offline Mode
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').then(reg => {
+                    console.log('ServiceWorker registered! Offline mode active.');
+                });
+            });
+        }
+    </script>
 </body>
-</html>
+</html> 
