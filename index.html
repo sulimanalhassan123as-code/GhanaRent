@@ -3,38 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GhanaRent</title>
+    <title>GhanaRent Pro</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="manifest" href="manifest.webmanifest">
-    <meta name="theme-color" content="#007BFF">
+    <meta name="theme-color" content="#1E3A8A">
 </head>
 <body>
     <header id="app-header">
         <h1 id="header-title">🏠 GhanaRent</h1>
-        <button id="install-btn" class="hidden btn-small">📲 Install App</button>
+        <button id="nav-btn" class="hidden btn-small" onclick="switchView('dashboard')">🔙 Back</button>
     </header>
 
     <main id="app-content">
-        </main>
+        <div id="view-dashboard" class="app-view"></div>
+        <div id="view-add-house" class="app-view hidden"></div>
+        <div id="view-tenant-manager" class="app-view hidden"></div>
+        
+        <div id="view-visitor" class="app-view hidden"></div>
+    </main>
 
-    <div id="ai-modal" class="modal hidden">
-        <div class="modal-content">
-            <h3>🤖 GhanaRent Helper</h3>
-            <p id="ai-tip">Welcome! Everything is working offline perfectly. ✅</p>
-            <button class="btn-blue" onclick="document.getElementById('ai-modal').classList.add('hidden')">Okay, thanks!</button>
-        </div>
-    </div>
+    <div id="print-area" class="hidden"></div>
 
     <script src="app.js"></script>
     <script>
-        // Register Service Worker for Offline Mode
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').then(reg => {
-                    console.log('ServiceWorker registered! Offline mode active.');
-                });
-            });
+            window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
         }
     </script>
 </body>
-</html> 
+</html>
