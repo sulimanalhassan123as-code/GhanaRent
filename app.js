@@ -1,286 +1,168 @@
-// Simple localStorage keys
-const STORAGE_KEY_PROPERTIES = 'ghanarent_properties';
-const STORAGE_KEY_PAYMENTS = 'ghanarent_payments';
-
-// In-memory state
-let properties = [];
-let payments = [];
-
-// DOM elements
-const landlordSection = document.getElementById('landlordSection');
-const visitorSection = document.getElementById('visitorSection');
-const landlordModeBtn = document.getElementById('landlordModeBtn');
-const visitorModeBtn = document.getElementById('visitorModeBtn');
-
-const totalHousesEl = document.getElementById('totalHouses');
-const totalTenantsEl = document.getElementById('totalTenants');
-const thisMonthCollectedEl = document.getElementById('thisMonthCollected');
-const stillOwingEl = document.getElementById('stillOwing');
-const owingListEl = document.getElementById('owingList');
-const paidListEl = document.getElementById('paidList');
-const visitorPropertyListEl = document.getElementById('visitorPropertyList');
-
-const addHouseBtn = document.getElementById('addHouseBtn');
-const houseFormModal = document.getElementById('houseFormModal');
-const houseNameInput = document.getElementById('houseNameInput');
-const houseAreaInput = document.getElementById('houseAreaInput');
-const houseTypeInput = document.getElementById('houseTypeInput');
-const houseAddressInput = document.getElementById('houseAddressInput');
-const houseRentInput = document.getElementById('houseRentInput');
-const houseAdvanceInput = document.getElementById('houseAdvanceInput');
-const houseDepositInput = document.getElementById('houseDepositInput');
-const houseImagesInput = document.getElementById('houseImagesInput');
-const saveHouseBtn = document.getElementById('saveHouseBtn');
-const cancelHouseBtn = document.getElementById('cancelHouseBtn');
-
-// --- UTILITIES ---
-
-function loadData() {
-  const p = localStorage.getItem(STORAGE_KEY_PROPERTIES);
-  const pay = localStorage.getItem(STORAGE_KEY_PAYMENTS);
-  properties = p ? JSON.parse(p) : [];
-  payments = pay ? JSON.parse(pay) : [];
-}
-
-function saveData() {
-  localStorage.setItem(STORAGE_KEY_PROPERTIES, JSON.stringify(properties));
-  localStorage.setItem(STORAGE_KEY_PAYMENTS, JSON.stringify(payments));
-}
-
-// Generate property ID: HSE + Area3letters + 001
-function generatePropertyId(area) {
-  const areaPart = (area || 'GEN').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3) || 'GEN';
-  const countForArea = properties.filter(p => p.id.startsWith(`HSE-${areaPart}`)).length + 1;
-  const numPart = String(countForArea).padStart(3, '0');
-  return `HSE-${areaPart}-${numPart}`;
-}
-
-// Simple currency format
-function formatMoney(amount) {
-  return '₵' + (amount || 0).toLocaleString();
-}
-
-// --- RENDER FUNCTIONS ---
-
-function renderDashboard() {
-  totalHousesEl.textContent = properties.length.toString();
-
-  // For now, tenants count = number of properties with status Occupied (simple)
-  const tenantsCount = properties.filter(p => p.status === 'Occupied').length;
-  totalTenantsEl.textContent = tenantsCount.toString();
-
-  const now = new Date();
-  const thisMonth = now.getMonth();
-  const thisYear = now.getFullYear();
-
-  let thisMonthCollected = 0;
-  payments.forEach(pay => {
-    const d = new Date(pay.datePaid);
-    if (d.getMonth() === thisMonth && d.getFullYear() === thisYear) {
-      thisMonthCollected += pay.amount;
+// Database Initialization
+const initDB = () => {
+    if (!localStorage.getItem('ghanaRentDB')) {
+        const dummyData = {
+            properties: [
+                { id: 1, name: "East Legon Villa", type: "2 Bedroom", address: "Accra", rent: 2000, advance: 1, status: "Vacant" },
+                { id: 2, name: "Tamale Compound", type: "Single Room", address: "Tamale", rent: 500, advance: 2, status: "Occupied" }
+            ],
+            tenants: [
+                { id: 1, name: "Kwame Mensah", phone: "233550000000", propId: 2, status: "Paid", balance: 0 },
+                { id: 2, name: "Ama Serwaa", phone: "233240000000", propId: null, status: "Owing", balance: 1500 }
+            ]
+        };
+        localStorage.setItem('ghanaRentDB', JSON.stringify(dummyData));
     }
-  });
-  thisMonthCollectedEl.textContent = formatMoney(thisMonthCollected);
+    return JSON.parse(localStorage.getItem('ghanaRentDB'));
+};
 
-  // For now, Still Owing = sum of all properties with status "OwingAmount" field (if we add later)
-  // To keep it simple, we just show 0 for now
-  stillOwingEl.textContent = formatMoney(0);
+const db = initDB();
 
-  // RED LIST / GREEN LIST (simple demo)
-  owingListEl.innerHTML = '';
-  paidListEl.innerHTML = '';
+// Routing Logic
+const urlParams = new URLSearchParams(window.location.search);
+const isVisitor = urlParams.get('mode') === 'visitor';
+const appContent = document.getElementById('app-content');
+const headerTitle = document.getElementById('header-title');
 
-  properties.forEach(p => {
-    const item = document.createElement('div');
-    item.className = 'list-item';
-    const left = document.createElement('div');
-    left.textContent = p.name + ' (' + p.area + ')';
-
-    const right = document.createElement('div');
-    const badge = document.createElement('span');
-    badge.className = 'badge';
-
-    // For now, if status is Vacant => Paid (no tenant owing)
-    // If Occupied => we mark as Paid (you can later add real logic)
-    if (p.status === 'Vacant') {
-      badge.classList.add('green');
-      badge.textContent = 'No Tenant';
-      right.appendChild(badge);
-      item.appendChild(left);
-      item.appendChild(right);
-      paidListEl.appendChild(item);
+const renderApp = () => {
+    if (isVisitor) {
+        headerTitle.innerText = "🏠 Available Houses";
+        renderVisitorView();
     } else {
-      badge.classList.add('green');
-      badge.textContent = 'Paid'; // placeholder
-      right.appendChild(badge);
-      item.appendChild(left);
-      item.appendChild(right);
-      paidListEl.appendChild(item);
+        headerTitle.innerText = "👨🏽‍💼 Landlord Dashboard";
+        renderLandlordView();
     }
-  });
-}
+};
 
-function renderVisitorView() {
-  visitorPropertyListEl.innerHTML = '';
+// Landlord View (Admin)
+const renderLandlordView = () => {
+    const totalOwing = db.tenants.filter(t => t.status === "Owing").reduce((sum, t) => sum + t.balance, 0);
+    const paidCount = db.tenants.filter(t => t.status === "Paid").length;
 
-  const vacantProps = properties.filter(p => p.status === 'Vacant' || !p.status);
+    let html = `
+        <div class="stat-grid">
+            <div class="stat-card green">
+                <h3>${paidCount}</h3><p>Paid Tenants</p>
+            </div>
+            <div class="stat-card red">
+                <h3>GH₵ ${totalOwing}</h3><p>Total Owing</p>
+            </div>
+        </div>
 
-  if (vacantProps.length === 0) {
-    visitorPropertyListEl.innerHTML = '<p>No vacant house now. Please check again later.</p>';
-    return;
-  }
+        <button class="btn-blue" onclick="showAddHouseForm()">➕ Add New House</button>
+        <button class="btn-blue" onclick="shareVisitorLink()">📲 Share Visitor Link</button>
 
-  vacantProps.forEach(p => {
-    const card = document.createElement('div');
-    card.className = 'property-card';
+        <h2 style="margin-top:20px;">🚨 Red List (Owing)</h2>
+    `;
 
-    const title = document.createElement('div');
-    title.textContent = p.name + ' - ' + p.type;
-    title.style.fontWeight = '600';
-
-    const addr = document.createElement('div');
-    addr.textContent = p.address;
-
-    const rent = document.createElement('div');
-    rent.textContent = 'Rent: ' + formatMoney(p.monthlyRent) + ' / month';
-
-    const advance = document.createElement('div');
-    advance.textContent = 'Advance: ' + p.advanceRequired;
-
-    const imagesWrap = document.createElement('div');
-    imagesWrap.className = 'property-images';
-
-    (p.images || []).forEach(src => {
-      const img = document.createElement('img');
-      img.src = src;
-      imagesWrap.appendChild(img);
+    db.tenants.filter(t => t.status === "Owing").forEach(t => {
+        html += `
+            <div class="card" style="border-left: 5px solid var(--red);">
+                <h3>${t.name}</h3>
+                <p>Owes: GH₵ ${t.balance}</p>
+                <button class="btn-red" onclick="sendWhatsApp('${t.phone}', 'Hello ${t.name}, this is a gentle reminder regarding your outstanding rent balance of GH₵ ${t.balance}.')">Send WhatsApp Reminder</button>
+            </div>
+        `;
     });
 
-    card.appendChild(title);
-    card.appendChild(addr);
-    card.appendChild(rent);
-    card.appendChild(advance);
-    if ((p.images || []).length > 0) {
-      card.appendChild(imagesWrap);
+    html += `<h2 style="margin-top:20px;">✅ Green List (Paid)</h2>`;
+    db.tenants.filter(t => t.status === "Paid").forEach(t => {
+        html += `
+            <div class="card" style="border-left: 5px solid var(--green);">
+                <h3>${t.name}</h3>
+                <p>Status: Up to date</p>
+                <button class="btn-green" onclick="sendWhatsApp('${t.phone}', 'Hello ${t.name}, thank you for keeping your rent up to date!')">Send Thank You message</button>
+            </div>
+        `;
+    });
+
+    appContent.innerHTML = html;
+};
+
+// Visitor View (Tenant)
+const renderVisitorView = () => {
+    let html = `<p style="text-align:center;">Find your next home below.</p>`;
+    const vacantProps = db.properties.filter(p => p.status === "Vacant");
+
+    if(vacantProps.length === 0) {
+        html += `<div class="card"><p>No houses available right now. Check back later!</p></div>`;
     }
 
-    visitorPropertyListEl.appendChild(card);
-  });
-}
-
-// --- EVENT HANDLERS ---
-
-landlordModeBtn.addEventListener('click', () => {
-  landlordModeBtn.classList.add('active');
-  visitorModeBtn.classList.remove('active');
-  landlordSection.classList.remove('hidden');
-  visitorSection.classList.add('hidden');
-});
-
-visitorModeBtn.addEventListener('click', () => {
-  visitorModeBtn.classList.add('active');
-  landlordModeBtn.classList.remove('active');
-  visitorSection.classList.remove('hidden');
-  landlordSection.classList.add('hidden');
-  renderVisitorView();
-});
-
-addHouseBtn.addEventListener('click', () => {
-  houseFormModal.classList.remove('hidden');
-});
-
-cancelHouseBtn.addEventListener('click', () => {
-  houseFormModal.classList.add('hidden');
-  clearHouseForm();
-});
-
-function clearHouseForm() {
-  houseNameInput.value = '';
-  houseAreaInput.value = '';
-  houseTypeInput.value = 'Single Room';
-  houseAddressInput.value = '';
-  houseRentInput.value = '';
-  houseAdvanceInput.value = '6 Months';
-  houseDepositInput.value = '';
-  houseImagesInput.value = '';
-}
-
-saveHouseBtn.addEventListener('click', () => {
-  const name = houseNameInput.value.trim();
-  const area = houseAreaInput.value.trim();
-  const type = houseTypeInput.value;
-  const address = houseAddressInput.value.trim();
-  const rent = Number(houseRentInput.value || 0);
-  const advanceRequired = houseAdvanceInput.value;
-  const deposit = Number(houseDepositInput.value || 0);
-
-  if (!name || !area || !address || !rent) {
-    alert('Please fill all main fields.');
-    return;
-  }
-
-  const id = generatePropertyId(area);
-
-  // Read images as base64 so they work offline
-  const files = Array.from(houseImagesInput.files || []);
-  if (files.length > 0) {
-    const readers = files.map(file => {
-      return new Promise(resolve => {
-        const reader = new FileReader();
-        reader.onload = e => resolve(e.target.result);
-        reader.readAsDataURL(file);
-      });
+    vacantProps.forEach(p => {
+        html += `
+            <div class="card">
+                <div class="img-placeholder">📸</div>
+                <h2>${p.name}</h2>
+                <p><strong>Type:</strong> ${p.type} | <strong>Location:</strong> ${p.address}</p>
+                <p><strong>Rent:</strong> GH₵ ${p.rent} / month</p>
+                <p><strong>Advance Required:</strong> ${p.advance} years</p>
+                <button class="btn-blue" onclick="sendWhatsApp('233000000000', 'Hello, I am interested in renting the ${p.name} property I saw on GhanaRent.')">Chat Landlord on WhatsApp</button>
+            </div>
+        `;
     });
 
-    Promise.all(readers).then(imgDataList => {
-      const newProp = {
-        id,
-        name,
-        type,
-        address,
-        area,
-        bedrooms: null,
-        bathrooms: null,
-        monthlyRent: rent,
-        advanceRequired,
-        damageDeposit: deposit,
-        depositRefundable: true,
-        agentFee: 0,
-        images: imgDataList,
-        status: 'Vacant'
-      };
-      properties.push(newProp);
-      saveData();
-      renderDashboard();
-      houseFormModal.classList.add('hidden');
-      clearHouseForm();
-    });
-  } else {
-    const newProp = {
-      id,
-      name,
-      type,
-      address,
-      area,
-      bedrooms: null,
-      bathrooms: null,
-      monthlyRent: rent,
-      advanceRequired,
-      damageDeposit: deposit,
-      depositRefundable: true,
-      agentFee: 0,
-      images: [],
-      status: 'Vacant'
-    };
-    properties.push(newProp);
-    saveData();
-    renderDashboard();
-    houseFormModal.classList.add('hidden');
-    clearHouseForm();
-  }
+    appContent.innerHTML = html;
+};
+
+// Utilities
+const sendWhatsApp = (phone, msg) => {
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+};
+
+const shareVisitorLink = () => {
+    const link = window.location.origin + window.location.pathname + "?mode=visitor";
+    showAIHelper(`Send this link to tenants:<br><br><a href="${link}">${link}</a>`);
+};
+
+const showAIHelper = (msg) => {
+    document.getElementById('ai-tip').innerHTML = msg;
+    document.getElementById('ai-modal').classList.remove('hidden');
+};
+
+const showAddHouseForm = () => {
+    appContent.innerHTML = `
+        <div class="card">
+            <h2>Add New House</h2>
+            <input type="text" id="h-name" placeholder="House Name (e.g., Safa Villa)">
+            <input type="text" id="h-type" placeholder="Type (e.g., Chamber & Hall)">
+            <input type="number" id="h-rent" placeholder="Monthly Rent (GH₵)">
+            <button class="btn-blue" onclick="saveHouse()">Save House</button>
+            <button class="btn-red" onclick="renderApp()">Cancel</button>
+        </div>
+    `;
+};
+
+const saveHouse = () => {
+    const name = document.getElementById('h-name').value;
+    const type = document.getElementById('h-type').value;
+    const rent = document.getElementById('h-rent').value;
+    
+    if(!name || !rent) return alert("Please fill details");
+
+    db.properties.push({ id: Date.now(), name, type, address: "TBD", rent, advance: 1, status: "Vacant" });
+    localStorage.setItem('ghanaRentDB', JSON.stringify(db));
+    showAIHelper("House Added Successfully! 🏠✅");
+    renderApp();
+};
+
+// PWA Install Prompt
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    document.getElementById('install-btn').classList.remove('hidden');
 });
 
-// --- INIT ---
+document.getElementById('install-btn').addEventListener('click', async () => {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+            document.getElementById('install-btn').classList.add('hidden');
+        }
+        deferredPrompt = null;
+    }
+});
 
-loadData();
-renderDashboard();
+// Start App
+renderApp();
