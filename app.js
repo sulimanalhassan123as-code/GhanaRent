@@ -1,45 +1,61 @@
-// Database Initialization
+// Premium DB Structure
 const initDB = () => {
-    if (!localStorage.getItem('ghanaRentDB')) {
+    if (!localStorage.getItem('ghanaRentDB_v2')) {
         const dummyData = {
             properties: [
-                { id: 1, name: "East Legon Villa", type: "2 Bedroom", address: "Accra", rent: 2000, advance: 1, status: "Vacant" },
-                { id: 2, name: "Tamale Compound", type: "Single Room", address: "Tamale", rent: 500, advance: 2, status: "Occupied" }
+                { id: 1, name: "East Legon Villa", type: "2 Bedroom", address: "Accra", rent: 2000, status: "Vacant" },
             ],
             tenants: [
-                { id: 1, name: "Kwame Mensah", phone: "233550000000", propId: 2, status: "Paid", balance: 0 },
-                { id: 2, name: "Ama Serwaa", phone: "233240000000", propId: null, status: "Owing", balance: 1500 }
+                { id: 1, name: "Kwame Mensah", phone: "233550000000", propName: "Tamale Compound", status: "Owing", balance: 1500 },
+                { id: 2, name: "Ama Serwaa", phone: "233240000000", propName: "Osu Apartment", status: "Paid", balance: 0 }
             ]
         };
-        localStorage.setItem('ghanaRentDB', JSON.stringify(dummyData));
+        localStorage.setItem('ghanaRentDB_v2', JSON.stringify(dummyData));
     }
-    return JSON.parse(localStorage.getItem('ghanaRentDB'));
+    return JSON.parse(localStorage.getItem('ghanaRentDB_v2'));
 };
 
-const db = initDB();
+let db = initDB();
 
-// Routing Logic
+// SPA Router System (The "Flash Page" logic without overlaps)
+const switchView = (viewId) => {
+    document.querySelectorAll('.app-view').forEach(view => view.classList.add('hidden'));
+    document.getElementById(`view-${viewId}`).classList.remove('hidden');
+    
+    const navBtn = document.getElementById('nav-btn');
+    if(viewId === 'dashboard' || viewId === 'visitor') {
+        navBtn.classList.add('hidden');
+    } else {
+        navBtn.classList.remove('hidden');
+    }
+    
+    // Instant Updates: Re-render before showing
+    if(viewId === 'dashboard') renderDashboard();
+    if(viewId === 'visitor') renderVisitor();
+};
+
+// Initial Load Setup
 const urlParams = new URLSearchParams(window.location.search);
 const isVisitor = urlParams.get('mode') === 'visitor';
-const appContent = document.getElementById('app-content');
-const headerTitle = document.getElementById('header-title');
 
-const renderApp = () => {
+window.onload = () => {
     if (isVisitor) {
-        headerTitle.innerText = "🏠 Available Houses";
-        renderVisitorView();
+        document.getElementById('header-title').innerText = "🏠 Available Houses";
+        switchView('visitor');
     } else {
-        headerTitle.innerText = "👨🏽‍💼 Landlord Dashboard";
-        renderLandlordView();
+        document.getElementById('header-title').innerText = "👨🏽‍💼 Landlord Pro";
+        switchView('dashboard');
     }
 };
 
-// Landlord View (Admin)
-const renderLandlordView = () => {
+// ==========================================
+// LANDLORD LOGIC
+// ==========================================
+const renderDashboard = () => {
     const totalOwing = db.tenants.filter(t => t.status === "Owing").reduce((sum, t) => sum + t.balance, 0);
     const paidCount = db.tenants.filter(t => t.status === "Paid").length;
 
-    let html = `
+    const html = `
         <div class="stat-grid">
             <div class="stat-card green">
                 <h3>${paidCount}</h3><p>Paid Tenants</p>
@@ -48,121 +64,143 @@ const renderLandlordView = () => {
                 <h3>GH₵ ${totalOwing}</h3><p>Total Owing</p>
             </div>
         </div>
-
-        <button class="btn-blue" onclick="showAddHouseForm()">➕ Add New House</button>
-        <button class="btn-blue" onclick="shareVisitorLink()">📲 Share Visitor Link</button>
-
-        <h2 style="margin-top:20px;">🚨 Red List (Owing)</h2>
-    `;
-
-    db.tenants.filter(t => t.status === "Owing").forEach(t => {
-        html += `
-            <div class="card" style="border-left: 5px solid var(--red);">
-                <h3>${t.name}</h3>
-                <p>Owes: GH₵ ${t.balance}</p>
-                <button class="btn-red" onclick="sendWhatsApp('${t.phone}', 'Hello ${t.name}, this is a gentle reminder regarding your outstanding rent balance of GH₵ ${t.balance}.')">Send WhatsApp Reminder</button>
-            </div>
-        `;
-    });
-
-    html += `<h2 style="margin-top:20px;">✅ Green List (Paid)</h2>`;
-    db.tenants.filter(t => t.status === "Paid").forEach(t => {
-        html += `
-            <div class="card" style="border-left: 5px solid var(--green);">
-                <h3>${t.name}</h3>
-                <p>Status: Up to date</p>
-                <button class="btn-green" onclick="sendWhatsApp('${t.phone}', 'Hello ${t.name}, thank you for keeping your rent up to date!')">Send Thank You message</button>
-            </div>
-        `;
-    });
-
-    appContent.innerHTML = html;
-};
-
-// Visitor View (Tenant)
-const renderVisitorView = () => {
-    let html = `<p style="text-align:center;">Find your next home below.</p>`;
-    const vacantProps = db.properties.filter(p => p.status === "Vacant");
-
-    if(vacantProps.length === 0) {
-        html += `<div class="card"><p>No houses available right now. Check back later!</p></div>`;
-    }
-
-    vacantProps.forEach(p => {
-        html += `
-            <div class="card">
-                <div class="img-placeholder">📸</div>
-                <h2>${p.name}</h2>
-                <p><strong>Type:</strong> ${p.type} | <strong>Location:</strong> ${p.address}</p>
-                <p><strong>Rent:</strong> GH₵ ${p.rent} / month</p>
-                <p><strong>Advance Required:</strong> ${p.advance} years</p>
-                <button class="btn-blue" onclick="sendWhatsApp('233000000000', 'Hello, I am interested in renting the ${p.name} property I saw on GhanaRent.')">Chat Landlord on WhatsApp</button>
-            </div>
-        `;
-    });
-
-    appContent.innerHTML = html;
-};
-
-// Utilities
-const sendWhatsApp = (phone, msg) => {
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
-};
-
-const shareVisitorLink = () => {
-    const link = window.location.origin + window.location.pathname + "?mode=visitor";
-    showAIHelper(`Send this link to tenants:<br><br><a href="${link}">${link}</a>`);
-};
-
-const showAIHelper = (msg) => {
-    document.getElementById('ai-tip').innerHTML = msg;
-    document.getElementById('ai-modal').classList.remove('hidden');
-};
-
-const showAddHouseForm = () => {
-    appContent.innerHTML = `
         <div class="card">
-            <h2>Add New House</h2>
-            <input type="text" id="h-name" placeholder="House Name (e.g., Safa Villa)">
-            <input type="text" id="h-type" placeholder="Type (e.g., Chamber & Hall)">
-            <input type="number" id="h-rent" placeholder="Monthly Rent (GH₵)">
-            <button class="btn-blue" onclick="saveHouse()">Save House</button>
-            <button class="btn-red" onclick="renderApp()">Cancel</button>
+            <h2>Quick Tools</h2>
+            <button class="btn-blue" onclick="renderAddHouse()">➕ Add New House</button>
+            <button class="btn-blue" onclick="renderTenantManager()">👥 Manage Tenants & Receipts</button>
+            <button class="btn-outline" onclick="shareVisitorLink()">📲 Share Link to WhatsApp</button>
+        </div>
+        
+        <div class="card" style="background: #FFFBEB; border-color: #FBBF24;">
+            <h2 style="color: #D97706;">🤖 AI Insight</h2>
+            <p>You have <strong>GH₵ ${totalOwing}</strong> locked in unpaid rent. Tap 'Manage Tenants' to generate instant reminders.</p>
         </div>
     `;
+    document.getElementById('view-dashboard').innerHTML = html;
 };
 
+const renderAddHouse = () => {
+    const html = `
+        <div class="card">
+            <h2>Add New Property</h2>
+            <p>Enter the details for your vacant house.</p>
+            <input type="text" id="h-name" placeholder="Property Name (e.g., Safa Villa)">
+            <input type="text" id="h-type" placeholder="Type (e.g., Chamber & Hall)">
+            <input type="number" id="h-rent" placeholder="Monthly Rent (GH₵)">
+            <button class="btn-blue" onclick="saveHouse()">✅ Save Property</button>
+        </div>
+    `;
+    document.getElementById('view-add-house').innerHTML = html;
+    switchView('add-house');
+};
+
+const renderTenantManager = () => {
+    let html = `<h2>🚨 Owing Rent</h2>`;
+    
+    db.tenants.filter(t => t.status === "Owing").forEach(t => {
+        html += `
+            <div class="card" style="border-left: 6px solid var(--crimson-red);">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <h3 style="margin-bottom:0;">${t.name}</h3>
+                        <p style="font-size:0.9rem;">${t.propName}</p>
+                    </div>
+                    <h3 style="color:var(--crimson-red);">GH₵ ${t.balance}</h3>
+                </div>
+                <div style="display:flex; gap:10px; margin-top:15px;">
+                    <button class="btn-red" style="margin:0;" onclick="sendWhatsApp('${t.phone}', 'Reminder: GH₵ ${t.balance} is outstanding for ${t.propName}.')">Chat</button>
+                    <button class="btn-green" style="margin:0;" onclick="markAsPaid(${t.id})">Mark Paid</button>
+                </div>
+            </div>
+        `;
+    });
+
+    html += `<h2 style="margin-top:30px;">✅ Rent Cleared</h2>`;
+    db.tenants.filter(t => t.status === "Paid").forEach(t => {
+        html += `
+            <div class="card" style="border-left: 6px solid var(--emerald-green);">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <h3 style="margin-bottom:0;">${t.name}</h3>
+                        <p style="font-size:0.9rem;">${t.propName}</p>
+                    </div>
+                    <button class="btn-outline btn-small" onclick="generateReceipt('${t.name}', '${t.propName}')">📄 PDF Receipt</button>
+                </div>
+            </div>
+        `;
+    });
+
+    document.getElementById('view-tenant-manager').innerHTML = html;
+    switchView('tenant-manager');
+};
+
+// Data Handlers
 const saveHouse = () => {
     const name = document.getElementById('h-name').value;
     const type = document.getElementById('h-type').value;
     const rent = document.getElementById('h-rent').value;
     
-    if(!name || !rent) return alert("Please fill details");
+    if(!name || !rent) return alert("Fill all details.");
 
-    db.properties.push({ id: Date.now(), name, type, address: "TBD", rent, advance: 1, status: "Vacant" });
-    localStorage.setItem('ghanaRentDB', JSON.stringify(db));
-    showAIHelper("House Added Successfully! 🏠✅");
-    renderApp();
+    db.properties.push({ id: Date.now(), name, type, address: "Ghana", rent, status: "Vacant" });
+    localStorage.setItem('ghanaRentDB_v2', JSON.stringify(db));
+    switchView('dashboard');
 };
 
-// PWA Install Prompt
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    document.getElementById('install-btn').classList.remove('hidden');
-});
-
-document.getElementById('install-btn').addEventListener('click', async () => {
-    if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-            document.getElementById('install-btn').classList.add('hidden');
-        }
-        deferredPrompt = null;
+const markAsPaid = (tenantId) => {
+    const tenant = db.tenants.find(t => t.id === tenantId);
+    if(tenant) {
+        tenant.status = "Paid";
+        tenant.balance = 0;
+        localStorage.setItem('ghanaRentDB_v2', JSON.stringify(db));
+        renderTenantManager(); // Instant DOM update
     }
-});
+};
 
-// Start App
-renderApp();
+// PDF Receipt Generator (Native, Offline, No Plugins)
+const generateReceipt = (name, prop) => {
+    const date = new Date().toLocaleDateString('en-GB');
+    const printHtml = `
+        <div class="receipt-box">
+            <h1 style="color:#1E3A8A;">GHANARENT</h1>
+            <h2>OFFICIAL RENT RECEIPT</h2>
+            <hr style="margin: 20px 0;">
+            <p style="text-align:left; font-size:1.2rem;"><strong>Date:</strong> ${date}</p>
+            <p style="text-align:left; font-size:1.2rem;"><strong>Received From:</strong> ${name}</p>
+            <p style="text-align:left; font-size:1.2rem;"><strong>Property:</strong> ${prop}</p>
+            <p style="text-align:left; font-size:1.2rem;"><strong>Status:</strong> <span style="color:#10B981;">PAID IN FULL</span></p>
+            <hr style="margin: 20px 0;">
+            <p><em>Thank you for your business. Generated securely via GhanaRent Pro.</em></p>
+        </div>
+    `;
+    document.getElementById('print-area').innerHTML = printHtml;
+    window.print(); // Triggers OS PDF engine
+};
+
+// ==========================================
+// VISITOR LOGIC
+// ==========================================
+const renderVisitor = () => {
+    let html = `<p style="text-align:center;">Browse premium properties below.</p>`;
+    const vacantProps = db.properties.filter(p => p.status === "Vacant");
+
+    vacantProps.forEach(p => {
+        html += `
+            <div class="card">
+                <div style="width:100%; height:180px; background:#E2E8F0; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:3rem; margin-bottom:15px;">🏠</div>
+                <h2>${p.name}</h2>
+                <p><strong>Type:</strong> ${p.type}</p>
+                <h3 style="color:var(--emerald-green); margin: 10px 0;">GH₵ ${p.rent} / month</h3>
+                <button class="btn-blue" onclick="sendWhatsApp('233000000000', 'Hello, I want to rent ${p.name}.')">Message Landlord</button>
+            </div>
+        `;
+    });
+    document.getElementById('view-visitor').innerHTML = html;
+};
+
+// Utils
+const sendWhatsApp = (phone, msg) => window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+const shareVisitorLink = () => {
+    const link = window.location.origin + window.location.pathname + "?mode=visitor";
+    sendWhatsApp('', `View available houses here: ${link}`);
+};
